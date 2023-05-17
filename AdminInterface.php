@@ -1,8 +1,16 @@
 <?php
 
 session_start();
-if( isset($_SESSION['Fname']))
-    echo $_SESSION['Fname'] . " " . $_SESSION['adminuser']." ".$_SESSION['profpic'];
+if(isset($_POST['update']))
+{
+    $_SESSION['profpic'] = $_COOKIE['img'];
+    $db = new mysqli('localhost', 'root', '', 'Anchor');
+    $qryString = "Update  MyAccounts set ProfPic='" . $_COOKIE['img'] . "'where accountNum='" . $_SESSION['idaccount'] . "'";
+    $db->query($qryString);
+
+}
+?>
+
 ?>
 
 <!DOCTYPE html>
@@ -12,6 +20,51 @@ if( isset($_SESSION['Fname']))
     <title>Anchor</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="AdminInterface.css">
+
+
+    <script>
+        function change() {
+            const inputFile = document.querySelector('#file');
+            const selectImage = document.querySelector('.select-image');
+            selectImage.addEventListener('click', function () {
+                inputFile.click();
+            })
+            inputFile.addEventListener('change', function () {
+                const image = this.files[0]
+                alert(image.name);
+                document.getElementById('imgch').src="image/"+image.name;
+                document.cookie="img=image/"+image.name;
+
+                if(image.size < 2000000) {
+                    const reader = new FileReader();
+                    reader.onload = ()=> {
+                        const allImg = imgArea.querySelectorAll('.imgup');
+                        allImg.forEach(item=> item.remove());
+                        const imgUrl = reader.result;
+                        const img = document.createElement('img');
+                        img.src = imgUrl;
+
+                        // imgArea.appendChild(img);
+                        // imgArea.classList.add('active');
+                        // imgArea.dataset.img = image.name;
+                        alert(image.name);
+//                        document.getElementById('imgch').src="image/"+image.name;
+                    }
+                    //       reader.readAsDataURL(image);
+
+                }
+                else {
+                    alert("Image size more than 2MB");
+                }
+
+            })
+
+        }
+    </script>
+
+
+
+
 </head>
 <body>
     <header class="sticky">
@@ -19,7 +72,7 @@ if( isset($_SESSION['Fname']))
         <ul class="nav">
             <li><a href="#">Event Statics</a></li>
             <li><a href="#">Feedback</a></li>
-            <li><a href="#">Sign Out</a></li>
+            <li><a href="SignIn.php">Sign Out</a></li>
         </ul>
 
         <div class="toggleMenu">
@@ -29,48 +82,107 @@ if( isset($_SESSION['Fname']))
     </header>
     <article>
         <div class="content">
-            <img src="image/profImg.jpg" alt="ProfPic">
+            <input type="file" name="image" id="file" accept="image/*" hidden>
+            <img src="<?php echo $_SESSION['profpic'];?>" id="imgch" alt="ProfPic" class="imgup">
             <div class="buttons">
-                <button>Upload Photo</button>
-                <button>Sign out</button>
+
+                <button class="select-image" onclick="change()"> Upload Photo</button>
+
+                <button onclick ="window.location.assign('SignIn.php');">Sign out</button>
+
             </div>
+            <form method="post">
+                <button type="submit" name="update" >Save</button>
+            </form>
+
+
             <div class="admin-info">
                 <div>
                     <span>User Name: </span>
-                    <span> Name</span>
-                    <button id="button">Edit Name</button>
+                    <span> <?php echo $_SESSION['Fname'] . " " .$_SESSION['Lname']?></span>
+
                 </div>
                 <div>
                     <span>Email: </span>
-                    <span> Email</span>
+                    <span> <?php echo $_SESSION['email']?></span>
                 </div>
-                <div class="hov">
-                    <span id="changePass">If you want to change password click here</span>
-                </div>
+
             </div>
         </div>
             <div class="reorder">
                 <div class="statics">
                     <table class="table">
                         <caption>Statistics of all events in the web site</caption>
+
                         <tr>
                             <th>name of event</th>
-                            <th>number of reports</th>
-                            <th>announcer name</th>
-                            <th>announcer email</th>
                             <th>number of registers</th>
+                            <th>Price</th>
                             <th>Full?</th>
+                            <th>Delete</th>
                         </tr>
+
+                        <?php
+                        $db=new mysqli('localhost','root','','Anchor');
+                        $qryString="select * from Event where isdeleted='0'" ;
+                        $res=$db->query($qryString);
+                        while ($row= $res->fetch_assoc())
+                        {
+                            ?>
+
+                            <tr>
+                                <td> <?php echo $row['EventName'];?> </td>
+                                <td> <?php echo $row['NumberOfParticipants'];?> </td>
+                                <td> <?php echo $row['EventPrice'].'$';?> </td>
+                                <td> <?php if ($row['NumberOfParticipants']==$row['MaxNumberOfParticipant']) echo "yes";else echo "no"; ?> </td>
+                              <form method="post">
+                               <td> <input name="rowid" value="<?php echo $row['Id'];?>" hidden type="text"><button type="submit" name="delbutton" >Delete</button></td>
+                              </form>
+                            </tr>
+
+                            <?php
+                        }
+
+                        if(isset($_POST['delbutton']))
+                      //  echo "<script> alert(".$_POST['rowid']."); </script>";
+                            $qryString="UPDATE `event` SET `isdeleted`='1' WHERE Id='".$_POST['rowid']."'";
+                            $res=$db->query($qryString);
+
+                        ?>
                     </table>
+
                 </div>
 
             <div class="statics">
                 <table class="table">
                     <caption>Reports from users</caption>
                     <tr>
-                        <th>from email</th>
+                        <th>Sender Name</th>
+                        <th>Sender Email</th>
                         <th>Feedback</th>
+                        <th>Seen</th>
                     </tr>
+
+                    <?php
+                    $db=new mysqli('localhost','root','','Anchor');
+                    $qryString="select * from feedback " ;
+                    $res=$db->query($qryString);
+                    while ($row= $res->fetch_assoc())
+                    {
+                        ?>
+
+                        <tr>
+                            <td> <?php echo $row['sendername'];?> </td>
+                            <td> <?php echo $row['senderemail'];?> </td>
+                            <td> <?php echo $row['msgcontent'].'$';?> </td>
+                            <td> no </td>
+
+                        </tr>
+
+                        <?php
+                    }
+                    ?>
+
                 </table>
             </div>
         </div>

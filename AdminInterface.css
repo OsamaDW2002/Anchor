@@ -96,7 +96,11 @@ article .content{
 }
 
 article .content img{
-    width: 250px;
+    min-width: 345px;
+    min-height: 330px;
+    max-width: 345px;
+    max-height: 330px;
+
     border-radius: 50%;
     margin-left:50px ;
 }

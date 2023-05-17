@@ -29,6 +29,7 @@ if(isset($_POST['username']) && isset($_POST['password']))
             $res=$db->query($qryString);
             $row= $res->fetch_assoc();
             if(isset($row['Adminuser'])){
+
                 if($row['Adminuser']==1)
                 {   $_SESSION['Fname']=$row['Fname'];
                     $_SESSION['Lname']=$row['Lname'];
@@ -37,8 +38,10 @@ if(isset($_POST['username']) && isset($_POST['password']))
                     $_SESSION['profpic']=$row['ProfPic'];
                     $_SESSION['idaccount']=$row['accountNum'];
                     $_SESSION['adminuser']=$row['Adminuser'];
+                    $_COOKIE['img']= $_SESSION['profpic'];
                     header('Location:AdminInterface.php');
                 }
+
                 else if($row['Adminuser']==0){
                     $_SESSION['Fname']=$row['Fname'];
                     $_SESSION['Lname']=$row['Lname'];
@@ -47,11 +50,12 @@ if(isset($_POST['username']) && isset($_POST['password']))
                     $_SESSION['profpic']=$row['ProfPic'];
                     $_SESSION['idaccount']=$row['accountNum'];
                     $_SESSION['adminuser']=$row['Adminuser'];
+                    $_COOKIE['img']= $_SESSION['profpic'];
+
                     header('Location:UserInterface.php');
                 }
             }
 
-            $db->close();
         }
         catch (Exception $e){
 
@@ -92,17 +96,17 @@ if(isset($_POST['username']) && isset($_POST['password']))
               if(isset($_POST['username'])&&isset($_POST['password'])){
                   try{
               $db=new mysqli('localhost','root','','Anchor');
-              $qryString="select Fname from MyAccounts where Fname='" .$_SESSION['Fname']. "'and Lname='".$_SESSION['Lname']."'";
+              $qryString="select Fname from MyAccounts where Fname='".$_SESSION['Fname']."'and Lname='".$_SESSION['Lname']."'";
               $res=$db->query($qryString);
               $row=$res->fetch_assoc();
 
-               if(!isset($row['Fname']) && !empty($_POST['username']))
+               if(isset($row['Fname']))
                  {
                      ?>
                      <p style="color: red">*wrong name please try again</p>
             <?php
                  }
-                  $db->close();
+
                   }
                   catch (Exception $e)
                   {
@@ -119,20 +123,21 @@ if(isset($_POST['username']) && isset($_POST['password']))
             <br>
             <?php
 
-            if(isset($_POST['username'])&&isset($_POST['password'])){
+            if(isset($_POST['username']) && isset($_POST['password'])){
                 try{
                     $db=new mysqli('localhost','root','','Anchor');
-                    $qryString="select Password from MyAccounts where Password='" .sha1($_SESSION['Password']). "'";
+                    $qryString="select Password from MyAccounts where Password = '".sha1($_POST['password'])."'";
+
                     $res=$db->query($qryString);
                     $row=$res->fetch_assoc();
 
-                    if(!isset($row['Password']) && !empty($_POST['password']))
+                    if(!isset($row['Password']))
                     {
                         ?>
                         <p style="color: red">*wrong Password please try again</p>
                         <?php
                     }
-                    $db->close();
+//                    $db->close();
 
                 }
                 catch (Exception $e)
